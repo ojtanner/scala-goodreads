@@ -10,9 +10,11 @@ import goodreads.{Book, Goodreads};
 
   val unnumberedSeries = "([\\w ]+, [^#])".r
 
-  val test = "The Vampire Genevieve, #3.7"
+  val test = "Abrakadabra (The Vampire Genevieve, #3.7, The Vampire Genevieve #3.7, The Vampire Genevieve)"
 
-  println(goodreads.extractNumberFromSeries(test))
+  val list = goodreads.extractAllSeries(test);
+
+  list.foreach(println)
   /*val test2 = "Drachenfels (The Vampire Genevieve)"
 
   val goodreads.generalSeriesPattern(onlySeries) = test;

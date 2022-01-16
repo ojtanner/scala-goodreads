@@ -3,8 +3,7 @@ package goodreads
 case class Book(
                  val id: String,
                  val title: String,
-                 val series: Option[String],
-                 val installment: Option[Float],
+                 val series: Option[List[Series]],
                  val author: String,
                  val authorLF: String,
                  val additionalAuthors: String,

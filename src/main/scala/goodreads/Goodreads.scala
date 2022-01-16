@@ -1,5 +1,7 @@
 package goodreads
 
+import goodreads.Series;
+import goodreads.Book;
 import scala.io.Source;
 
 class Goodreads {
@@ -17,6 +19,7 @@ class Goodreads {
 
   val generalSeriesPattern = ".*(\\(.*\\))".r
   val seriesNumber = "[\\w ]+,? #(\\d(?:\\.\\d+)?)".r
+  val seriesTitleWithoutNumber = "([\\w ]+),? #\\d(?:\\.\\d+)?".r
 
   private def removeHeader(goodreadsCsv: List[String]): List[String] = goodreadsCsv.tail;
 
@@ -36,14 +39,34 @@ class Goodreads {
     }
   }
 
-  def extractSeriesTitleAndNumber(bookTitle: String): Option[List[(String, Float)]] = {
-    val series = bookTitle.split(", (?=[^#])")
+  def extractAllSeries(bookTitle: String): Option[List[Series]] = {
+    if (!generalSeriesPattern.matches(bookTitle)) {
+      return None;
+    }
+
+    val generalSeriesPattern(rawSeries) = bookTitle;
+
+    val series = rawSeries.drop(1).dropRight(1).split(", (?=[^#])").toList;
+
+    series.foreach(println)
 
     if (series.length <= 0) return None;
 
+    return Some(series.map(extractSeriesTitleAndNumber))
+  }
 
+  def extractSeriesTitleAndNumber(seriesTitle: String): Series = {
+    val seriesNumber = extractNumberFromSeries(seriesTitle);
 
-    Some(List(("a", 1.0F)))
+    seriesNumber match {
+      case Some(number) => {
+        val seriesTitleWithoutNumber(title) = seriesTitle;
+
+        return Series(title, Some(number));
+      }
+
+      case None => return Series(seriesTitle, None);
+    }
   }
 
   def extractNumberFromSeries(seriesTitle: String): Option[Float] = {
@@ -76,7 +99,6 @@ class Goodreads {
     val id = data(0);
     val title = dropSeriesFromTitle(fullTitle);
     val series = None;
-    val installment = None;
     val author = data(2);
     val authorLF = data(3);
     val additionalAuthors = data(4);
@@ -99,7 +121,6 @@ class Goodreads {
       id,
       title,
       series,
-      installment,
       author,
       authorLF,
       additionalAuthors,
