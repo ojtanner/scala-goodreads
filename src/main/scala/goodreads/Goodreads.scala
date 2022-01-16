@@ -16,8 +16,7 @@ class Goodreads {
   def getStandaloneBooks(books: List[Book]): List[Book] = books.filter(book => book.series == None)
 
   val generalSeriesPattern = ".*(\\(.*\\))".r
-  val numberedSeries = "([\\w ]+,? #\\d(?:\\.\\d+)?)".r
-  val unnumberedSeries = "\\(([\\w ]+)\\)".r
+  val seriesNumber = "[\\w ]+,? #(\\d(?:\\.\\d+)?)".r
 
   private def removeHeader(goodreadsCsv: List[String]): List[String] = goodreadsCsv.tail;
 
@@ -37,21 +36,24 @@ class Goodreads {
     }
   }
 
-  def extractSeriesTitleAndNumber(bookTitle: String): Option[(String, Float)] = {
-    /*try {
-      val generalSeriesPattern(series) = bookTitle;
-      val titleAndNumber: Array[String] = series.drop(1).dropRight(1).split(", #");
-      val title = titleAndNumber(0);
-      val goodreadsTitleFormatsAreAbsoluteAndUtterGarbagePattern(possiblyNumber) = titleAndNumber(1);
-      val number = possiblyNumber.toFloat;
+  def extractSeriesTitleAndNumber(bookTitle: String): Option[List[(String, Float)]] = {
+    val series = bookTitle.split(", (?=[^#])")
 
-      Some(title, number);
-    } catch {
-      case e: MatchError => None;
-      case _ => None;
-    }*/
+    if (series.length <= 0) return None;
 
-    Some("a", 1.0F)
+
+
+    Some(List(("a", 1.0F)))
+  }
+
+  def extractNumberFromSeries(seriesTitle: String): Option[Float] = {
+    if (seriesNumber.matches(seriesTitle)) {
+      val seriesNumber(number) = seriesTitle;
+
+      return Some(number.toFloat);
+    }
+
+    return None;
   }
 
   private def normalizeTitle(title: String): String = {
@@ -73,8 +75,8 @@ class Goodreads {
 
     val id = data(0);
     val title = dropSeriesFromTitle(fullTitle);
-    val series = seriesAndNumber.map((seriesTitle, seriesNumber) => seriesTitle);
-    val installment = seriesAndNumber.map((seriesTitle, seriesNumber) => seriesNumber);
+    val series = None;
+    val installment = None;
     val author = data(2);
     val authorLF = data(3);
     val additionalAuthors = data(4);
