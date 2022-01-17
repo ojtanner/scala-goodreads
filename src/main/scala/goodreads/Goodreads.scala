@@ -4,21 +4,28 @@ import scala.io.Source
 
 class Goodreads {
 
-  def readCSV(): List[String] = {
-    val source = Source.fromFile("src/main/scala/ressources/goodreads_library_export.txt")
-    val file = source.getLines().toList
-    source.close()
+  def encodeBooksFromCsv(path: String = ""): List[Book] = {
+    val file = readCSV()
 
-    file
+    encode(file)
   }
 
-  def encode(goodreadsCsv: List[String]): List[Book] = {
+  private def encode(goodreadsCsv: List[String]): List[Book] = {
+
     val linesToEncode = removeHeader(goodreadsCsv)
 
     linesToEncode.map(lineToBook)
   }
 
   def getStandaloneBooks(books: List[Book]): List[Book] = books.filter(book => book.series.isEmpty)
+
+  private def readCSV(): List[String] = {
+    val source = Source.fromFile("src/main/scala/ressources/goodreads_library_export.txt")
+    val file = source.getLines().toList
+    source.close()
+
+    file
+  }
 
   private val generalSeriesPattern = ".*(\\(.*\\))".r
   private val seriesNumber = "[\\w ]+,? #(\\d(?:\\.\\d+)?)".r
@@ -28,7 +35,7 @@ class Goodreads {
 
   private val titleWithoutSeriesPattern = "(.*)\\(.*\\)".r
 
-  def dropSeriesFromTitle(bookTitle: String): String = {
+  private def dropSeriesFromTitle(bookTitle: String): String = {
     try {
       val titleWithoutSeriesPattern(title) = bookTitle
 
@@ -38,7 +45,7 @@ class Goodreads {
     }
   }
 
-  def extractAllSeries(bookTitle: String): Option[List[Series]] = {
+  private def extractAllSeries(bookTitle: String): Option[List[Series]] = {
     if (!generalSeriesPattern.matches(bookTitle)) {
       return None
     }
@@ -52,7 +59,7 @@ class Goodreads {
     Some(series.map(extractSeriesTitleAndNumber))
   }
 
-  def extractSeriesTitleAndNumber(seriesTitle: String): Series = {
+  private def extractSeriesTitleAndNumber(seriesTitle: String): Series = {
     val seriesNumber = extractNumberFromSeries(seriesTitle)
 
     seriesNumber match {
@@ -65,7 +72,7 @@ class Goodreads {
     }
   }
 
-  def extractNumberFromSeries(seriesTitle: String): Option[Float] = {
+  private def extractNumberFromSeries(seriesTitle: String): Option[Float] = {
     if (seriesNumber.matches(seriesTitle)) {
       val seriesNumber(number) = seriesTitle
 
