@@ -1,6 +1,6 @@
 import goodreads.{Book, Goodreads};
 
-object Goodreads extends App() {
+object Main extends App() {
 
   val goodreads: Goodreads = new Goodreads();
 
