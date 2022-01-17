@@ -1,12 +1,12 @@
-import goodreads.{Book, Goodreads};
+import goodreads.{Book, Goodreads}
 
 object Main extends App() {
 
-  val goodreads: Goodreads = new Goodreads();
+  val goodreads: Goodreads = new Goodreads()
 
-  val file = goodreads.readCSV();
+  val file = goodreads.readCSV()
 
-  val books: List[Book] = goodreads.encode(file);
+  val books: List[Book] = goodreads.encode(file)
 
   // books.foreach(println);
 
