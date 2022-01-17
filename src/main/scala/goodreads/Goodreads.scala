@@ -1,122 +1,119 @@
 package goodreads
 
-import goodreads.Series;
-import goodreads.Book;
-import scala.io.Source;
+import scala.io.Source
 
 class Goodreads {
 
   def readCSV(): List[String] = {
-    val source = Source.fromFile("src/main/scala/ressources/goodreads_library_export.txt");
-    val file = source.getLines().toList;
-    source.close();
+    val source = Source.fromFile("src/main/scala/ressources/goodreads_library_export.txt")
+    val file = source.getLines().toList
+    source.close()
 
-    file;
-  };
+    file
+  }
 
   def encode(goodreadsCsv: List[String]): List[Book] = {
-    val linesToEncode = removeHeader(goodreadsCsv);
+    val linesToEncode = removeHeader(goodreadsCsv)
 
-    linesToEncode.map(lineToBook);
+    linesToEncode.map(lineToBook)
   }
 
   def getStandaloneBooks(books: List[Book]): List[Book] = books.filter(book => book.series.isEmpty)
 
-  val generalSeriesPattern = ".*(\\(.*\\))".r
-  val seriesNumber = "[\\w ]+,? #(\\d(?:\\.\\d+)?)".r
-  val seriesTitleWithoutNumber = "([\\w ]+),? #\\d(?:\\.\\d+)?".r
+  private val generalSeriesPattern = ".*(\\(.*\\))".r
+  private val seriesNumber = "[\\w ]+,? #(\\d(?:\\.\\d+)?)".r
+  private val seriesTitleWithoutNumber = "([\\w ]+),? #\\d(?:\\.\\d+)?".r
 
-  private def removeHeader(goodreadsCsv: List[String]): List[String] = goodreadsCsv.tail;
+  private def removeHeader(goodreadsCsv: List[String]): List[String] = goodreadsCsv.tail
 
   private val titleWithoutSeriesPattern = "(.*)\\(.*\\)".r
 
   def dropSeriesFromTitle(bookTitle: String): String = {
     try {
-      val titleWithoutSeriesPattern(title) = bookTitle;
+      val titleWithoutSeriesPattern(title) = bookTitle
 
-      title;
+      title
     } catch {
-      case _ => bookTitle;
+      case _ => bookTitle
     }
   }
 
   def extractAllSeries(bookTitle: String): Option[List[Series]] = {
     if (!generalSeriesPattern.matches(bookTitle)) {
-      return None;
+      return None
     }
 
-    val generalSeriesPattern(rawSeries) = bookTitle;
+    val generalSeriesPattern(rawSeries) = bookTitle
 
-    val series = rawSeries.drop(1).dropRight(1).split("; (?=[^#])").toList;
+    val series = rawSeries.drop(1).dropRight(1).split("; (?=[^#])").toList
 
-    if (series.length <= 0) return None;
+    if (series.length <= 0) return None
 
     Some(series.map(extractSeriesTitleAndNumber))
   }
 
   def extractSeriesTitleAndNumber(seriesTitle: String): Series = {
-    val seriesNumber = extractNumberFromSeries(seriesTitle);
+    val seriesNumber = extractNumberFromSeries(seriesTitle)
 
     seriesNumber match {
-      case Some(number) => {
-        val seriesTitleWithoutNumber(title) = seriesTitle;
+      case Some(number) =>
+        val seriesTitleWithoutNumber(title) = seriesTitle
+        Series(title, Some(number))
 
-        Series(title, Some(number));
-      }
-
-      case None => Series(seriesTitle, None);
+      case None =>
+        Series(seriesTitle, None)
     }
   }
 
   def extractNumberFromSeries(seriesTitle: String): Option[Float] = {
     if (seriesNumber.matches(seriesTitle)) {
-      val seriesNumber(number) = seriesTitle;
+      val seriesNumber(number) = seriesTitle
 
-      return Some(number.toFloat);
+      return Some(number.toFloat)
     }
 
-    None;
+    None
   }
 
   private def normalizeTitle(title: String): String = {
-    val firstChar = title(0);
-    val lastChar = title(title.length - 1);
+    val firstChar = title(0)
+    val lastChar = title(title.length - 1)
 
     if (firstChar == '\"' && lastChar == '\"') {
-      title.drop(1).dropRight(1);
+      title.drop(1).dropRight(1)
     } else {
-      title;
+      title
     }
   }
 
   private def lineToBook(line: String): Book = {
-    val data: Array[String] = line.split("\t");
+    val data: Array[String] = line.split("\t")
 
-    val fullTitle = normalizeTitle(data(1));
-    val seriesAndNumber = extractAllSeries(fullTitle);
+    val fullTitle = normalizeTitle(data(1))
+    val seriesAndNumber = extractAllSeries(fullTitle)
 
-    val id = data(0);
-    val title = dropSeriesFromTitle(fullTitle);
-    val series = seriesAndNumber;
-    val author = data(2);
-    val authorLF = data(3);
-    val additionalAuthors = data(4);
-    val isbn = data(5);
-    val isbn13 = data(6);
-    val myRating = data(7);
-    val averageRating = data(8);
-    val publisher = data(9);
-    val binding = data(10);
-    val pageNumber = data(11);
-    val yearPublished = data(12);
-    val originalYearPubhlished = data(13);
-    val dateRead = data(14);
-    val dateAdded = data(15);
-    val bookshelves = data(16);
-    val bookshelvesWithPosition = data(17);
-    val exclusiveShelf = data(18);
+    val id = data(0)
+    val title = dropSeriesFromTitle(fullTitle)
+    val series = seriesAndNumber
+    val author = data(2)
+    val authorLF = data(3)
+    val additionalAuthors = data(4)
+    val isbn = data(5)
+    val isbn13 = data(6)
+    val myRating = data(7)
+    val averageRating = data(8)
+    val publisher = data(9)
+    val binding = data(10)
+    val pageNumber = data(11)
+    val yearPublished = data(12)
+    val originalYearPubhlished = data(13)
+    val dateRead = data(14)
+    val dateAdded = data(15)
+    val bookshelves = data(16)
+    val bookshelvesWithPosition = data(17)
+    val exclusiveShelf = data(18)
 
-    return Book(
+    Book(
       id,
       title,
       series,
