@@ -1,6 +1,7 @@
 package goodreads
 
 import scala.io.Source
+import scala.collection.immutable.Map
 
 class Goodreads {
 
@@ -8,6 +9,47 @@ class Goodreads {
     val file = readCSV()
 
     encode(file)
+  }
+
+  def getReadBooks(books: List[Book]): List[Book] =
+    books.filter(book => book.exclusiveShelf == "read")
+
+  def getUnreadBooks(books: List[Book]): List[Book] =
+    books.filter(book => book.exclusiveShelf == "to-read")
+
+  def booksToSeriesOfBooks(books: List[Book]): Map[String, Series] =
+    books.foldRight(Map.empty[String, Series])(addBookSeriesToMap)
+
+  def getCompletedSeries(books: List[Book]): List[Series] = {
+    val seriesMap = booksToSeriesOfBooks(books)
+
+    seriesMap.toList.map(_._2).filter(series => series.books.forall(book => book.exclusiveShelf == "read"))
+  }
+
+  private def addBookSeriesToMap(book: Book, seriesMap: Map[String, Series]): Map[String, Series] = {
+    book.series match {
+      case None =>
+        seriesMap
+
+      case Some(seriesList) =>
+        seriesList.foldRight(seriesMap)((currentSeries: SeriesInstalment, currentSeriesMap: Map[String, Series]) => {
+          val maybeSeries = currentSeriesMap.get(currentSeries.title)
+
+          maybeSeries match {
+            case None =>
+              val newSeries: Series = Series(currentSeries.title, List(book))
+              val updatedSeriesMap: Map[String, Series] = currentSeriesMap + (currentSeries.title -> newSeries)
+              updatedSeriesMap
+
+            case Some(series) =>
+              val currentBooksOfSeries: List[Book] = series.books
+              val updatedBooksOfSeries: List[Book] = currentBooksOfSeries.appended(book)
+              val udpatedSeries: Series = Series(series.title, updatedBooksOfSeries)
+              val updatedSeriesMap: Map[String, Series] = currentSeriesMap + (series.title -> udpatedSeries)
+              updatedSeriesMap
+          }
+        })
+    }
   }
 
   private def encode(goodreadsCsv: List[String]): List[Book] = {
@@ -45,7 +87,7 @@ class Goodreads {
     }
   }
 
-  private def extractAllSeries(bookTitle: String): Option[List[Series]] = {
+  private def extractAllSeries(bookTitle: String): Option[List[SeriesInstalment]] = {
     if (!generalSeriesPattern.matches(bookTitle)) {
       return None
     }
@@ -59,16 +101,16 @@ class Goodreads {
     Some(series.map(extractSeriesTitleAndNumber))
   }
 
-  private def extractSeriesTitleAndNumber(seriesTitle: String): Series = {
+  private def extractSeriesTitleAndNumber(seriesTitle: String): SeriesInstalment = {
     val seriesNumber = extractNumberFromSeries(seriesTitle)
 
     seriesNumber match {
       case Some(number) =>
         val seriesTitleWithoutNumber(title) = seriesTitle
-        Series(title, Some(number))
+        SeriesInstalment(title, Some(number))
 
       case None =>
-        Series(seriesTitle, None)
+        SeriesInstalment(seriesTitle, None)
     }
   }
 
@@ -103,21 +145,17 @@ class Goodreads {
     val title = dropSeriesFromTitle(fullTitle)
     val series = seriesAndNumber
     val author = data(2)
-    val authorLF = data(3)
     val additionalAuthors = data(4)
     val isbn = data(5)
     val isbn13 = data(6)
     val myRating = data(7)
     val averageRating = data(8)
     val publisher = data(9)
-    val binding = data(10)
-    val pageNumber = data(11)
+    val pageNumber = data(11).toIntOption
     val yearPublished = data(12)
     val originalYearPubhlished = data(13)
     val dateRead = data(14)
     val dateAdded = data(15)
-    val bookshelves = data(16)
-    val bookshelvesWithPosition = data(17)
     val exclusiveShelf = data(18)
 
     Book(
@@ -125,21 +163,17 @@ class Goodreads {
       title,
       series,
       author,
-      authorLF,
       additionalAuthors,
       isbn,
       isbn13,
       myRating,
       averageRating,
       publisher,
-      binding,
       pageNumber,
       yearPublished,
       originalYearPubhlished,
       dateRead,
       dateAdded,
-      bookshelves,
-      bookshelvesWithPosition,
       exclusiveShelf,
     )
   }
