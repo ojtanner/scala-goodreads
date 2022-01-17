@@ -6,8 +6,13 @@ import scala.io.Source;
 
 class Goodreads {
 
-  def readCSV(): List[String] =
-    Source.fromFile("src/main/scala/ressources/goodreads_library_export.txt").getLines().toList;
+  def readCSV(): List[String] = {
+    val source = Source.fromFile("src/main/scala/ressources/goodreads_library_export.txt");
+    val file = source.getLines().toList;
+    source.close();
+
+    file;
+  };
 
   def encode(goodreadsCsv: List[String]): List[Book] = {
     val linesToEncode = removeHeader(goodreadsCsv);
@@ -15,7 +20,7 @@ class Goodreads {
     linesToEncode.map(lineToBook);
   }
 
-  def getStandaloneBooks(books: List[Book]): List[Book] = books.filter(book => book.series == None)
+  def getStandaloneBooks(books: List[Book]): List[Book] = books.filter(book => book.series.isEmpty)
 
   val generalSeriesPattern = ".*(\\(.*\\))".r
   val seriesNumber = "[\\w ]+,? #(\\d(?:\\.\\d+)?)".r
@@ -25,15 +30,11 @@ class Goodreads {
 
   private val titleWithoutSeriesPattern = "(.*)\\(.*\\)".r
 
-  private def belongsToSeries(bookTitle: String): Boolean = {
-    generalSeriesPattern.matches(bookTitle);
-  }
-
   def dropSeriesFromTitle(bookTitle: String): String = {
     try {
       val titleWithoutSeriesPattern(title) = bookTitle;
 
-      return title;
+      title;
     } catch {
       case _ => bookTitle;
     }
@@ -46,13 +47,11 @@ class Goodreads {
 
     val generalSeriesPattern(rawSeries) = bookTitle;
 
-    val series = rawSeries.drop(1).dropRight(1).split(", (?=[^#])").toList;
-
-    series.foreach(println)
+    val series = rawSeries.drop(1).dropRight(1).split("; (?=[^#])").toList;
 
     if (series.length <= 0) return None;
 
-    return Some(series.map(extractSeriesTitleAndNumber))
+    Some(series.map(extractSeriesTitleAndNumber))
   }
 
   def extractSeriesTitleAndNumber(seriesTitle: String): Series = {
@@ -62,10 +61,10 @@ class Goodreads {
       case Some(number) => {
         val seriesTitleWithoutNumber(title) = seriesTitle;
 
-        return Series(title, Some(number));
+        Series(title, Some(number));
       }
 
-      case None => return Series(seriesTitle, None);
+      case None => Series(seriesTitle, None);
     }
   }
 
@@ -76,7 +75,7 @@ class Goodreads {
       return Some(number.toFloat);
     }
 
-    return None;
+    None;
   }
 
   private def normalizeTitle(title: String): String = {
@@ -84,9 +83,9 @@ class Goodreads {
     val lastChar = title(title.length - 1);
 
     if (firstChar == '\"' && lastChar == '\"') {
-      return title.drop(1).dropRight(1);
+      title.drop(1).dropRight(1);
     } else {
-      return title;
+      title;
     }
   }
 
@@ -94,11 +93,11 @@ class Goodreads {
     val data: Array[String] = line.split("\t");
 
     val fullTitle = normalizeTitle(data(1));
-    val seriesAndNumber = extractSeriesTitleAndNumber(fullTitle);
+    val seriesAndNumber = extractAllSeries(fullTitle);
 
     val id = data(0);
     val title = dropSeriesFromTitle(fullTitle);
-    val series = None;
+    val series = seriesAndNumber;
     val author = data(2);
     val authorLF = data(3);
     val additionalAuthors = data(4);
