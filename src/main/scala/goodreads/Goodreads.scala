@@ -70,8 +70,8 @@ class Goodreads {
   }
 
   private val generalSeriesPattern = ".*(\\(.*\\))".r
-  private val seriesNumber = "[\\w ]+,? #(\\d(?:\\.\\d+)?)".r
-  private val seriesTitleWithoutNumber = "([\\w ]+),? #\\d(?:\\.\\d+)?".r
+  private val seriesNumber = "[\\w' ]+,? #(\\d(?:\\.\\d+)?)".r
+  private val seriesTitleWithoutNumber = "([\\w' ]+),? #\\d(?:\\.\\d+)?".r
 
   private def removeHeader(goodreadsCsv: List[String]): List[String] = goodreadsCsv.tail
 
@@ -87,7 +87,7 @@ class Goodreads {
     }
   }
 
-  private def extractAllSeries(bookTitle: String): Option[List[SeriesInstalment]] = {
+  def extractAllSeries(bookTitle: String): Option[List[SeriesInstalment]] = {
     if (!generalSeriesPattern.matches(bookTitle)) {
       return None
     }
