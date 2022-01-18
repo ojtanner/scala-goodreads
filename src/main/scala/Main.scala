@@ -7,7 +7,7 @@ object Main extends App() {
 
   val books: List[Book] = goodreads.encodeBooksFromCsv()
 
-  val completedSeries = goodreads.booksToSeriesOfBooks(books)
+  val uncompletedSeries = goodreads.getUncompletedSeries(books, true)
 
-  completedSeries.foreach(println)
+  uncompletedSeries.foreach(println)
 }

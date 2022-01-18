@@ -2,6 +2,7 @@ package goodreads
 
 import scala.io.Source
 import scala.collection.immutable.Map
+import scala.util.chaining.scalaUtilChainingOps
 
 class Goodreads {
 
@@ -20,23 +21,43 @@ class Goodreads {
   def booksToSeriesOfBooks(books: List[Book]): Map[String, Series] =
     books.foldRight(Map.empty[String, Series])(addBookSeriesToMap)
 
-  def getCompletedSeries(books: List[Book]): List[Series] = {
+  def getCompletedSeries(books: List[Book], includeSecondaryWorks: Boolean = false): List[Series] = {
     val seriesMap: Map[String, Series] = booksToSeriesOfBooks(books)
 
     seriesMap
       .toList
       .map(_._2)
+      .pipe((allSeries: List[Series]) => allSeries.map((series: Series) => filterOutSecondaryWorks(series, includeSecondaryWorks)))
       .filter(series => series.books.forall(book => book.exclusiveShelf == "read"))
   }
 
-  def getUncompletedSeries(books: List[Book]): List[Series] = {
+  def getUncompletedSeries(books: List[Book], includeSecondaryWorks: Boolean = false): List[Series] = {
     val seriesMap: Map[String, Series] = booksToSeriesOfBooks(books)
 
     seriesMap
       .toList
       .map(_._2)
+      .pipe((allSeries: List[Series]) => allSeries.map((series: Series) => filterOutSecondaryWorks(series, includeSecondaryWorks)))
       .filter(series => series.books.exists(book => book.exclusiveShelf == "read"))
       .filter(series => series.books.exists(book => book.exclusiveShelf == "to-read"))
+  }
+
+  private def filterOutSecondaryWorks(series: Series, includeSecondaryWorks: Boolean = false): Series = {
+    if (includeSecondaryWorks) {
+      val primaryWorks = series.books.filter(book => bookIsPrimaryWorkOfSeries(book, series))
+      Series(series.title, primaryWorks)
+    } else {
+      series
+    }
+  }
+
+  // untested
+  def bookIsPrimaryWorkOfSeries(book: Book, series: Series): Boolean = {
+    book.series.getOrElse(List()).exists(seriesInstallment => {
+      seriesInstallment.title == series.title &&
+        seriesInstallment.installmentNumber.isDefined &&
+        seriesInstallment.installmentNumber.get == Math.floor(seriesInstallment.installmentNumber.get)
+    })
   }
 
   private def addBookSeriesToMap(book: Book, seriesMap: Map[String, Series]): Map[String, Series] = {
