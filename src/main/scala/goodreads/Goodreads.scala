@@ -21,9 +21,22 @@ class Goodreads {
     books.foldRight(Map.empty[String, Series])(addBookSeriesToMap)
 
   def getCompletedSeries(books: List[Book]): List[Series] = {
-    val seriesMap = booksToSeriesOfBooks(books)
+    val seriesMap: Map[String, Series] = booksToSeriesOfBooks(books)
 
-    seriesMap.toList.map(_._2).filter(series => series.books.forall(book => book.exclusiveShelf == "read"))
+    seriesMap
+      .toList
+      .map(_._2)
+      .filter(series => series.books.forall(book => book.exclusiveShelf == "read"))
+  }
+
+  def getUncompletedSeries(books: List[Book]): List[Series] = {
+    val seriesMap: Map[String, Series] = booksToSeriesOfBooks(books)
+
+    seriesMap
+      .toList
+      .map(_._2)
+      .filter(series => series.books.exists(book => book.exclusiveShelf == "read"))
+      .filter(series => series.books.exists(book => book.exclusiveShelf == "to-read"))
   }
 
   private def addBookSeriesToMap(book: Book, seriesMap: Map[String, Series]): Map[String, Series] = {
@@ -70,8 +83,8 @@ class Goodreads {
   }
 
   private val generalSeriesPattern = ".*(\\(.*\\))".r
-  private val seriesNumber = "[\\w' ]+,? #(\\d(?:\\.\\d+)?)".r
-  private val seriesTitleWithoutNumber = "([\\w' ]+),? #\\d(?:\\.\\d+)?".r
+  private val seriesNumber = "[\\w'\\- ]+,? #(\\d(?:\\.\\d+)?)".r
+  private val seriesTitleWithoutNumber = "([\\w'\\- ]+),? #\\d(?:\\.\\d+)?".r
 
   private def removeHeader(goodreadsCsv: List[String]): List[String] = goodreadsCsv.tail
 
@@ -87,7 +100,7 @@ class Goodreads {
     }
   }
 
-  def extractAllSeries(bookTitle: String): Option[List[SeriesInstalment]] = {
+  private def extractAllSeries(bookTitle: String): Option[List[SeriesInstalment]] = {
     if (!generalSeriesPattern.matches(bookTitle)) {
       return None
     }
