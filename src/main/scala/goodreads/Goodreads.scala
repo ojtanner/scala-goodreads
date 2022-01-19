@@ -42,8 +42,18 @@ class Goodreads {
       .filter(series => series.books.exists(book => book.exclusiveShelf == "to-read"))
   }
 
+  def getUnreadSeries(books: List[Book], includeSecondaryWorks: Boolean = false): List[Series] = {
+    val seriesMap: Map[String, Series] = booksToSeriesOfBooks(books)
+
+    seriesMap
+      .toList
+      .map(_._2)
+      .pipe((allSeries: List[Series]) => allSeries.map((series: Series) => filterOutSecondaryWorks(series, includeSecondaryWorks)))
+      .filter(series => series.books.forall(book => book.exclusiveShelf == "to-read"))
+  }
+
   private def filterOutSecondaryWorks(series: Series, includeSecondaryWorks: Boolean = false): Series = {
-    if (includeSecondaryWorks) {
+    if (!includeSecondaryWorks) {
       val primaryWorks = series.books.filter(book => bookIsPrimaryWorkOfSeries(book, series))
       Series(series.title, primaryWorks)
     } else {
@@ -106,8 +116,8 @@ class Goodreads {
   }
 
   private val generalSeriesPattern = ".*(\\(.*\\))".r
-  private val seriesNumber = "[\\w'\\- ]+,? #(\\d(?:\\.\\d+)?)".r
-  private val seriesTitleWithoutNumber = "([\\w'\\- ]+),? #\\d(?:\\.\\d+)?".r
+  private val seriesNumber = "[\\w'\\-’&íè:. ]+,? #(\\d+(?:\\.\\d+)?)".r
+  private val seriesTitleWithoutNumber = "([\\w'\\-’&íè:. ]+),? #\\d+(?:\\.\\d+)?".r
 
   private def removeHeader(goodreadsCsv: List[String]): List[String] = goodreadsCsv.tail
 
@@ -123,7 +133,7 @@ class Goodreads {
     }
   }
 
-  private def extractAllSeries(bookTitle: String): Option[SeriesInstalment] = {
+  def extractAllSeries(bookTitle: String): Option[SeriesInstalment] = {
     if (!generalSeriesPattern.matches(bookTitle)) {
       return None
     }
@@ -171,7 +181,7 @@ class Goodreads {
     }
   }
 
-  private def lineToBook(line: String): Book = {
+  def lineToBook(line: String): Book = {
     val data: Array[String] = line.split("\t")
 
     val fullTitle = normalizeTitle(data(1))
