@@ -1,4 +1,5 @@
-import goodreads.{Book, Goodreads}
+import goodreads.{Book, Goodreads, Series}
+
 import scala.collection.immutable.Map
 
 object Main extends App() {
@@ -9,5 +10,6 @@ object Main extends App() {
 
   val uncompletedSeries = goodreads.getUncompletedSeries(books, true)
 
-  uncompletedSeries.foreach(println)
+  uncompletedSeries.foreach(Series.print)
+  // uncompletedSeries.foreach(println)
 }

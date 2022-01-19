@@ -53,11 +53,15 @@ class Goodreads {
 
   // untested
   def bookIsPrimaryWorkOfSeries(book: Book, series: Series): Boolean = {
-    book.series.getOrElse(List()).exists(seriesInstallment => {
-      seriesInstallment.title == series.title &&
-        seriesInstallment.installmentNumber.isDefined &&
-        seriesInstallment.installmentNumber.get == Math.floor(seriesInstallment.installmentNumber.get)
-    })
+    book.series match {
+      case None =>
+        false
+
+      case Some(seriesInstalment: SeriesInstalment) =>
+        seriesInstalment.title == series.title &&
+          seriesInstalment.installmentNumber.isDefined &&
+          seriesInstalment.installmentNumber.get == Math.floor(seriesInstalment.installmentNumber.get)
+    }
   }
 
   private def addBookSeriesToMap(book: Book, seriesMap: Map[String, Series]): Map[String, Series] = {
@@ -65,24 +69,22 @@ class Goodreads {
       case None =>
         seriesMap
 
-      case Some(seriesList) =>
-        seriesList.foldRight(seriesMap)((currentSeries: SeriesInstalment, currentSeriesMap: Map[String, Series]) => {
-          val maybeSeries = currentSeriesMap.get(currentSeries.title)
+      case Some(series) =>
+        val maybeSeries = seriesMap.get(series.title)
 
-          maybeSeries match {
-            case None =>
-              val newSeries: Series = Series(currentSeries.title, List(book))
-              val updatedSeriesMap: Map[String, Series] = currentSeriesMap + (currentSeries.title -> newSeries)
-              updatedSeriesMap
+        maybeSeries match {
+          case None =>
+            val newSeries: Series = Series(series.title, List(book))
+            val updatedSeriesMap: Map[String, Series] = seriesMap + (series.title -> newSeries)
+            updatedSeriesMap
 
-            case Some(series) =>
-              val currentBooksOfSeries: List[Book] = series.books
-              val updatedBooksOfSeries: List[Book] = currentBooksOfSeries.appended(book)
-              val udpatedSeries: Series = Series(series.title, updatedBooksOfSeries)
-              val updatedSeriesMap: Map[String, Series] = currentSeriesMap + (series.title -> udpatedSeries)
-              updatedSeriesMap
-          }
-        })
+          case Some(series) =>
+            val currentBooksOfSeries: List[Book] = series.books
+            val updatedBooksOfSeries: List[Book] = currentBooksOfSeries.appended(book)
+            val updatedSeries: Series = Series(series.title, updatedBooksOfSeries)
+            val updatedSeriesMap: Map[String, Series] = seriesMap + (series.title -> updatedSeries)
+            updatedSeriesMap
+        }
     }
   }
 
@@ -121,18 +123,18 @@ class Goodreads {
     }
   }
 
-  private def extractAllSeries(bookTitle: String): Option[List[SeriesInstalment]] = {
+  private def extractAllSeries(bookTitle: String): Option[SeriesInstalment] = {
     if (!generalSeriesPattern.matches(bookTitle)) {
       return None
     }
 
     val generalSeriesPattern(rawSeries) = bookTitle
 
-    val series = rawSeries.drop(1).dropRight(1).split("; (?=[^#])").toList
+    val series: List[String] = rawSeries.drop(1).dropRight(1).split("; (?=[^#])").toList
 
     if (series.length <= 0) return None
 
-    Some(series.map(extractSeriesTitleAndNumber))
+    Some(extractSeriesTitleAndNumber(series.head))
   }
 
   private def extractSeriesTitleAndNumber(seriesTitle: String): SeriesInstalment = {
