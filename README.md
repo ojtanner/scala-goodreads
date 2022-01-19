@@ -1,8 +1,8 @@
-## sbt project compiled with Scala 3
+# TODO's
 
-### Usage
+## Parsing
 
-This is a normal sbt project. You can compile code with `sbt compile`, run it with `sbt run`, and `sbt console` will start a Scala 3 REPL.
-
-For more information on the sbt-dotty plugin, see the
-[scala3-example-project](https://github.com/scala/scala3-example-project/blob/main/README.md).
+Special cases with examples:
+- Series with no numbers (Warhammer Crime)
+- Series with no pound sign before instalment number (Destroyermen Book 14)
+- Series with "Book " instead of the pound sign before the instalment number (The Rhenwars Saga Book 4)
