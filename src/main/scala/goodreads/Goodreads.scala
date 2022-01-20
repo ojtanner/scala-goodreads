@@ -66,11 +66,12 @@ class Goodreads {
       case None =>
         false
 
+      /* Either the whole series has no numbers and therefore we have no way of distinguishing primary works from secondary works
+         Or the number is a round number and therefore a primary work
+       */
       case Some(seriesInstalment: SeriesInstalment) =>
-        seriesInstalment.title == series.title &&
-          (seriesInstalment.installmentNumber.isEmpty ||
-            (seriesInstalment.installmentNumber.isDefined && seriesInstalment.installmentNumber.get == Math.floor(seriesInstalment.installmentNumber.get)))
-
+          seriesInstalment.installmentNumber.isEmpty ||
+            (seriesInstalment.installmentNumber.isDefined && seriesInstalment.installmentNumber.get == Math.floor(seriesInstalment.installmentNumber.get))
     }
   }
 
