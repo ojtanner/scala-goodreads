@@ -116,6 +116,7 @@ class Goodreads {
     file
   }
 
+  // These regex are a mess. There must be a better way without repetition
   private val generalSeriesPattern = ".*(\\(.*\\))".r
   private val seriesNumber = "[\\w'\\-’&íè:. ]+,? #?(\\d+(?:\\.\\d+)?)".r
   private val seriesTitleWithoutNumber = "([\\w'\\-’&íè:. ]+),? #?\\d+(?:\\.\\d+)?".r
