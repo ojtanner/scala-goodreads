@@ -61,7 +61,6 @@ class Goodreads {
     }
   }
 
-  // untested
   def bookIsPrimaryWorkOfSeries(book: Book, series: Series): Boolean = {
     book.series match {
       case None =>
@@ -69,8 +68,9 @@ class Goodreads {
 
       case Some(seriesInstalment: SeriesInstalment) =>
         seriesInstalment.title == series.title &&
-          seriesInstalment.installmentNumber.isDefined &&
-          seriesInstalment.installmentNumber.get == Math.floor(seriesInstalment.installmentNumber.get)
+          (seriesInstalment.installmentNumber.isEmpty ||
+            (seriesInstalment.installmentNumber.isDefined && seriesInstalment.installmentNumber.get == Math.floor(seriesInstalment.installmentNumber.get)))
+
     }
   }
 
@@ -116,8 +116,8 @@ class Goodreads {
   }
 
   private val generalSeriesPattern = ".*(\\(.*\\))".r
-  private val seriesNumber = "[\\w'\\-’&íè:. ]+,? #(\\d+(?:\\.\\d+)?)".r
-  private val seriesTitleWithoutNumber = "([\\w'\\-’&íè:. ]+),? #\\d+(?:\\.\\d+)?".r
+  private val seriesNumber = "[\\w'\\-’&íè:. ]+,? #?(\\d+(?:\\.\\d+)?)".r
+  private val seriesTitleWithoutNumber = "([\\w'\\-’&íè:. ]+),? #?\\d+(?:\\.\\d+)?".r
 
   private def removeHeader(goodreadsCsv: List[String]): List[String] = goodreadsCsv.tail
 
@@ -144,7 +144,7 @@ class Goodreads {
 
     if (series.length <= 0) return None
 
-    Some(extractSeriesTitleAndNumber(series.head))
+    Some(extractSeriesTitleAndNumber(series.head.trim))
   }
 
   private def extractSeriesTitleAndNumber(seriesTitle: String): SeriesInstalment = {

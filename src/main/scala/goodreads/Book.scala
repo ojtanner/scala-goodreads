@@ -27,7 +27,17 @@ case class Book(
 
 object Book {
   def print(book: Book): Unit = {
-    println(s"${book.exclusiveShelf}\t\tBook ${book.series.getOrElse(SeriesInstalment("", Some(0))).installmentNumber.getOrElse(0.0f).toInt}: ${book.title}")
 
+    val seriesInstalment: Option[Float] = book.series match {
+      case None => None
+      case Some(instalment) => instalment.installmentNumber
+    }
+
+    val instalmentNumberAsString: String = seriesInstalment match {
+      case None => ""
+      case Some(float) => float.toInt.toString
+    }
+
+    println(s"${book.exclusiveShelf}\t\tBook ${instalmentNumberAsString}: ${book.title}")
   }
 }
