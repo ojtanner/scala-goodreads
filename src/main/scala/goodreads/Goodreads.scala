@@ -12,6 +12,9 @@ class Goodreads {
     encode(csvRows)
   }
 
+  def getStandaloneBooks(books: List[Book]): List[Book] = 
+    books.filter(book => book.series.isEmpty)
+
   def getReadBooks(books: List[Book]): List[Book] =
     books.filter(book => book.exclusiveShelf == "read")
 
@@ -61,7 +64,7 @@ class Goodreads {
     }
   }
 
-  def bookIsPrimaryWorkOfSeries(book: Book, series: Series): Boolean = {
+  private def bookIsPrimaryWorkOfSeries(book: Book, series: Series): Boolean = {
     book.series match {
       case None =>
         false
@@ -81,9 +84,9 @@ class Goodreads {
         seriesMap
 
       case Some(series) =>
-        val maybeSeries = seriesMap.get(series.title)
+        val seriesInMap = seriesMap.get(series.title)
 
-        maybeSeries match {
+        seriesInMap match {
           case None =>
             val newSeries: Series = Series(series.title, List(book))
             val updatedSeriesMap: Map[String, Series] = seriesMap + (series.title -> newSeries)
@@ -103,118 +106,9 @@ class Goodreads {
 
     val linesToEncode = removeHeader(goodreadsCsv)
 
-    linesToEncode.map(lineToBook)
+    linesToEncode.map(Book.lineToBook)
   }
-
-  def getStandaloneBooks(books: List[Book]): List[Book] = books.filter(book => book.series.isEmpty)
-
-  // These regex are a mess. There must be a better way without repetition
-  private val generalSeriesPattern = ".*(\\(.*\\))".r
-  private val seriesNumber = "[\\w'\\-’&íè:. ]+,? #?(\\d+(?:\\.\\d+)?)".r
-  private val seriesTitleWithoutNumber = "([\\w'\\-’&íè:. ]+),? #?\\d+(?:\\.\\d+)?".r
 
   private def removeHeader(goodreadsCsv: List[List[String]]): List[List[String]] = goodreadsCsv.tail
 
-  private val titleWithoutSeriesPattern = "(.*)\\(.*\\)".r
-
-  private def dropSeriesFromTitle(bookTitle: String): String = {
-    try {
-      val titleWithoutSeriesPattern(title) = bookTitle
-
-      title
-    } catch {
-      case _: Throwable => bookTitle
-    }
-  }
-
-  def extractAllSeries(bookTitle: String): Option[SeriesInstalment] = {
-    if (!generalSeriesPattern.matches(bookTitle)) {
-      return None
-    }
-
-    val generalSeriesPattern(rawSeries) = bookTitle
-
-    val series: List[String] = rawSeries.drop(1).dropRight(1).split("; (?=[^#])").toList
-
-    if (series.length <= 0) return None
-
-    Some(extractSeriesTitleAndNumber(series.head.trim))
-  }
-
-  private def extractSeriesTitleAndNumber(seriesTitle: String): SeriesInstalment = {
-    val seriesNumber = extractNumberFromSeries(seriesTitle)
-
-    seriesNumber match {
-      case Some(number) =>
-        val seriesTitleWithoutNumber(title) = seriesTitle
-        SeriesInstalment(title, Some(number))
-
-      case None =>
-        SeriesInstalment(seriesTitle, None)
-    }
-  }
-
-  private def extractNumberFromSeries(seriesTitle: String): Option[Float] = {
-    if (seriesNumber.matches(seriesTitle)) {
-      val seriesNumber(number) = seriesTitle
-
-      return Some(number.toFloat)
-    }
-
-    None
-  }
-
-  private def normalizeTitle(title: String): String = {
-    val firstChar = title(0)
-    val lastChar = title(title.length - 1)
-
-    if (firstChar == '\"' && lastChar == '\"') {
-      title.drop(1).dropRight(1)
-    } else {
-      title
-    }
-  }
-
-  private def lineToBook(line: List[String]): Book = {
-    val data = line
-
-    val fullTitle = normalizeTitle(data(1))
-    val seriesAndNumber = extractAllSeries(fullTitle)
-
-    val id = data(0)
-    val title = dropSeriesFromTitle(fullTitle)
-    val series = seriesAndNumber
-    val author = data(2)
-    val additionalAuthors = data(4)
-    val isbn = data(5)
-    val isbn13 = data(6)
-    val myRating = data(7)
-    val averageRating = data(8)
-    val publisher = data(9)
-    val pageNumber = data(11).toIntOption
-    val yearPublished = data(12)
-    val originalYearPubhlished = data(13)
-    val dateRead = data(14)
-    val dateAdded = data(15)
-    val exclusiveShelf = data(18)
-
-    Book(
-      id,
-      title,
-      series,
-      author,
-      additionalAuthors,
-      isbn,
-      isbn13,
-      myRating,
-      averageRating,
-      publisher,
-      pageNumber,
-      yearPublished,
-      originalYearPubhlished,
-      dateRead,
-      dateAdded,
-      exclusiveShelf,
-    )
-  }
 }
