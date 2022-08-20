@@ -10,5 +10,6 @@ lazy val root = project
 
     libraryDependencies ++= Seq(
       "com.novocode" % "junit-interface" % "0.11" % "test",
+      "org.apache.commons" % "commons-csv" % "1.9.0"
     )
 )

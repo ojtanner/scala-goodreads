@@ -1,4 +1,4 @@
-import goodreads.{Book, Goodreads, Series}
+import goodreads.{Book, Goodreads, Series, CSVReader}
 
 object Main extends App() {
 
@@ -11,13 +11,11 @@ object Main extends App() {
   val completedSeries = goodreads.getCompletedSeries(books)
   val unreadSeries = goodreads.getUnreadSeries(books)
 
-  val line = "49950044	\"Winds of Wrath (Destroyermen, #15)\"	Taylor Anderson	\"Anderson, Taylor\"				0	4.61	Ace	Kindle Edition		2020			04/09/2021	to-read	to-read (#1056)	to-read				0			0"
-
   // println(goodreads.lineToBook(line))
   // books.foreach(println)
 
   //allSeries.foreach(println)
-  // uncompletedSeries.foreach(Series.print)
-  completedSeries.foreach(Series.print)
+  uncompletedSeries.foreach(Series.print)
+  // completedSeries.foreach(Series.print)
   // unreadSeries.foreach(Series.print)
 }

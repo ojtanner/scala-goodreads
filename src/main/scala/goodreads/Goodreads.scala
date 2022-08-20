@@ -7,9 +7,9 @@ import scala.util.chaining.scalaUtilChainingOps
 class Goodreads {
 
   def encodeBooksFromCsv(path: String = ""): List[Book] = {
-    val file = readCSV()
+    val csvRows = CSVReader.readCSV()
 
-    encode(file)
+    encode(csvRows)
   }
 
   def getReadBooks(books: List[Book]): List[Book] =
@@ -99,7 +99,7 @@ class Goodreads {
     }
   }
 
-  private def encode(goodreadsCsv: List[String]): List[Book] = {
+  private def encode(goodreadsCsv: List[List[String]]): List[Book] = {
 
     val linesToEncode = removeHeader(goodreadsCsv)
 
@@ -108,20 +108,12 @@ class Goodreads {
 
   def getStandaloneBooks(books: List[Book]): List[Book] = books.filter(book => book.series.isEmpty)
 
-  private def readCSV(): List[String] = {
-    val source = Source.fromFile("src/main/scala/ressources/goodreads_library_export.txt")
-    val file = source.getLines().toList
-    source.close()
-
-    file
-  }
-
   // These regex are a mess. There must be a better way without repetition
   private val generalSeriesPattern = ".*(\\(.*\\))".r
   private val seriesNumber = "[\\w'\\-’&íè:. ]+,? #?(\\d+(?:\\.\\d+)?)".r
   private val seriesTitleWithoutNumber = "([\\w'\\-’&íè:. ]+),? #?\\d+(?:\\.\\d+)?".r
 
-  private def removeHeader(goodreadsCsv: List[String]): List[String] = goodreadsCsv.tail
+  private def removeHeader(goodreadsCsv: List[List[String]]): List[List[String]] = goodreadsCsv.tail
 
   private val titleWithoutSeriesPattern = "(.*)\\(.*\\)".r
 
@@ -131,7 +123,7 @@ class Goodreads {
 
       title
     } catch {
-      case _ => bookTitle
+      case _: Throwable => bookTitle
     }
   }
 
@@ -183,8 +175,8 @@ class Goodreads {
     }
   }
 
-  def lineToBook(line: String): Book = {
-    val data: Array[String] = line.split("\t")
+  private def lineToBook(line: List[String]): Book = {
+    val data = line
 
     val fullTitle = normalizeTitle(data(1))
     val seriesAndNumber = extractAllSeries(fullTitle)
