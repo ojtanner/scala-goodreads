@@ -15,7 +15,7 @@ object Main extends App() {
   // books.foreach(println)
 
   //allSeries.foreach(println)
-  uncompletedSeries.foreach(Series.print)
+  uncompletedSeries.foreach((series: Series) => println(series.toString()))
   // completedSeries.foreach(Series.print)
   // unreadSeries.foreach(Series.print)
 }
