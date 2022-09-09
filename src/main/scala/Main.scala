@@ -1,4 +1,5 @@
 import goodreads.{Book, Goodreads, Series, CSVReader}
+import goodreads.MarkdownWriter
 
 object Main extends App() {
 
@@ -15,7 +16,9 @@ object Main extends App() {
   // books.foreach(println)
 
   //allSeries.foreach(println)
-  uncompletedSeries.foreach((series: Series) => println(series.toString()))
+  // uncompletedSeries.foreach()
   // completedSeries.foreach(Series.print)
   // unreadSeries.foreach(Series.print)
+
+  MarkdownWriter.write(uncompletedSeries, "uncompletedSeriesOliver.md")
 }
