@@ -1,0 +1,80 @@
+package goodreads.reader
+
+import scala.io.Source
+import scala.Option
+
+import cats.effect.{IO, Resource}
+import cats.data.NonEmptyList
+import cats.implicits._
+import com.github.gekomad.ittocsv.parser.IttoCSVFormat.default
+import com.github.gekomad.ittocsv.core.Header._
+import com.github.gekomad.ittocsv.core.FromCsv._
+import com.github.gekomad.ittocsv.core.ParseFailure
+
+object CSVReader {
+
+    case class GoodreadsBook(
+      bookId: String,
+      title: String,
+      author: String,
+      authorLF: String,
+      additionalAuthors: String,
+      isbn: String,
+      isbn13: String,
+      myRating: String,
+      averageRating: String,
+      publisher: String,
+      binding: String,
+      pageNumber: String,
+      publicationYear: String,
+      originalPublicationYear: String,
+      dateRead: String,
+      dateAdded: String,
+      bookshelves: String,
+      bookshelvesWithPosition: String,
+      exclusiveShelf: String,
+      myReview: String,
+      spoiler: String,
+      privateNotes: String,
+      readCount: String,
+      recommendedFor: String,
+      recommendedBy: String,
+      ownedCopies: String,
+      originalPurchaseDate: String,
+      originalPurchaseLocation: String,
+      condition: String,
+      conditionDescription: String,
+      bcid: String
+    )
+
+  def readFile(file: String): IO[List[String]] = {
+    def sourceIO: IO[Source] = IO(Source.fromResource(file))
+    def readLines(source: Source): IO[List[String]] = IO(source.getLines().toList)
+    def closeFile(source: Source): IO[Unit] = IO(source.close())
+
+    val makeResource: Resource[IO, Source] = Resource.make(sourceIO)(src => closeFile(src))
+    val readResource: IO[List[String]] = makeResource.use(src => readLines(src))
+
+    readResource
+  } 
+
+  implicit val newFormatter = default
+    .withTrim(true)
+    .withIgnoreEmptyLines(true)
+
+  def csvRowStringToList(csv: String): List[Either[NonEmptyList[ParseFailure], GoodreadsBook]] = {
+    fromCsv[GoodreadsBook](csv).toList
+  }
+
+  def parseCsv(file: String): IO[Unit] = for {
+    rowsAsStringList <- readFile("goodreads_library_export.csv")
+    parsingResultsAsList <- IO.pure(rowsAsStringList.flatMap(csvRowStringToList))
+    _ <- parsingResultsAsList.traverse(rowParsingResult => IO.println(
+      rowParsingResult match {
+        case Left(x) => "Left"
+        case Right(x) => "Right"
+      }
+    ))
+  } yield IO.unit
+
+}

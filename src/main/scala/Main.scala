@@ -1,8 +1,12 @@
 import goodreads.{Book, Goodreads, Series, CSVReader}
+import goodreads.reader.{CSVReader => EffectReader}
 import goodreads.MarkdownWriter
+import cats.effect.IOApp
+import cats.effect.{ExitCode, IO}
+import cats.implicits._
 
+/*
 object Main extends App() {
-
   val goodreads: Goodreads = new Goodreads()
 
   val books: List[Book] = goodreads.encodeBooksFromCsv()
@@ -21,4 +25,11 @@ object Main extends App() {
   // unreadSeries.foreach(Series.print)
 
   MarkdownWriter.write(uncompletedSeries, "uncompletedSeriesOliver.md")
+}
+*/
+
+object Main extends IOApp.Simple {
+
+  override def run: IO[Unit] = EffectReader.parseCsv("goodreads_library_export.csv")
+  
 }
