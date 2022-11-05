@@ -1,6 +1,7 @@
 package goodreads
 
 import scala.math.Ordered.orderingToOrdered
+import goodreads.reader.RawBook
 
 case class Book(
                  id: String,
@@ -43,27 +44,26 @@ case class Book(
 }
 
 object Book {
-  def lineToBook(line: List[String]): Book = {
-    val data = line
-    val fullTitle = normalizeTitle(data(1))
+  def fromRawBook(rawBook: RawBook): Book = {
+    val fullTitle = normalizeTitle(rawBook.title)
     val (bookTitle, seriesInstalment) = SeriesInstalment.extractSeriesInstalment(fullTitle)
 
-    val id = data(0)
+    val id = rawBook.bookId
     val title = bookTitle
     val series = seriesInstalment
-    val author = data(2)
-    val additionalAuthors = data(4)
-    val isbn = data(5)
-    val isbn13 = data(6)
-    val myRating = data(7)
-    val averageRating = data(8)
-    val publisher = data(9)
-    val pageNumber = data(11).toIntOption
-    val yearPublished = data(12)
-    val originalYearPublished = data(13)
-    val dateRead = data(14)
-    val dateAdded = data(15)
-    val exclusiveShelf = data(18)
+    val author = rawBook.author
+    val additionalAuthors = rawBook.additionalAuthors
+    val isbn = rawBook.isbn
+    val isbn13 = rawBook.isbn13
+    val myRating = rawBook.myRating
+    val averageRating = rawBook.averageRating
+    val publisher = rawBook.publisher
+    val pageNumber = rawBook.pageNumber.toIntOption
+    val yearPublished = rawBook.publicationYear
+    val originalYearPublished = rawBook.originalPublicationYear
+    val dateRead = rawBook.dateRead
+    val dateAdded = rawBook.dateAdded
+    val exclusiveShelf = rawBook.exclusiveShelf
 
     Book(
       id,

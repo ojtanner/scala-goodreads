@@ -1,15 +1,21 @@
 package goodreads
 
+import goodreads.reader.{RawBook, CSVReader}
+
+import cats.effect.IO
 import scala.io.Source
 import scala.collection.immutable.Map
 import scala.util.chaining.scalaUtilChainingOps
 
-class Goodreads {
+object Goodreads {
 
-  def encodeBooksFromCsv(path: String = ""): List[Book] = {
-    val csvRows = CSVReader.readCSV()
+  def encodeBooksFromCsv(path: String = ""): IO[List[Book]] = {
 
-    encode(csvRows)
+    val rawBooksFromCsv: IO[List[RawBook]] = CSVReader.parseCsv(path)
+
+    val encodedBooks: IO[List[Book]] = rawBooksFromCsv.map(encode)
+
+    encodedBooks
   }
 
   def getStandaloneBooks(books: List[Book]): List[Book] = 
@@ -102,11 +108,8 @@ class Goodreads {
     }
   }
 
-  private def encode(goodreadsCsv: List[List[String]]): List[Book] = {
-
-    val linesToEncode = removeHeader(goodreadsCsv)
-
-    linesToEncode.map(Book.lineToBook)
+  private def encode(rawBooks: List[RawBook]): List[Book] = {
+    rawBooks.map(Book.fromRawBook)
   }
 
   private def removeHeader(goodreadsCsv: List[List[String]]): List[List[String]] = goodreadsCsv.tail

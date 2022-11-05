@@ -30,6 +30,14 @@ object Main extends App() {
 
 object Main extends IOApp.Simple {
 
-  override def run: IO[Unit] = EffectReader.parseCsv("goodreads_library_export.csv")
+  override def run: IO[Unit] = {
+
+    val books: IO[List[Book]] = Goodreads.encodeBooksFromCsv("goodreads_library_export.csv")
+
+    for {
+      bookList <- books
+      _ <- bookList.traverse(IO.println)
+    } yield IO.unit
+  }
   
 }
