@@ -1,13 +1,9 @@
 package goodreads.reader
 
 import scala.io.Source
-import scala.Option
-
 import cats.effect.{IO, Resource}
 import cats.data.NonEmptyList
-import cats.implicits._
 import com.github.gekomad.ittocsv.parser.IttoCSVFormat.default
-import com.github.gekomad.ittocsv.core.Header._
 import com.github.gekomad.ittocsv.core.FromCsv._
 import com.github.gekomad.ittocsv.core.ParseFailure
 
@@ -35,14 +31,7 @@ case class RawBook(
   spoiler: String,
   privateNotes: String,
   readCount: String,
-  recommendedFor: String,
-  recommendedBy: String,
-  ownedCopies: String,
-  originalPurchaseDate: String,
-  originalPurchaseLocation: String,
-  condition: String,
-  conditionDescription: String,
-  bcid: String
+  ownedCopies: String
 )
 
 object CSVReader {
@@ -63,7 +52,7 @@ object CSVReader {
     .withIgnoreEmptyLines(true)
 
   private def csvRowStringToList(csv: String): List[Either[NonEmptyList[ParseFailure], RawBook]] = {
-    fromCsv[RawBook](csv).toList
+    fromCsv[RawBook](csv)
   }
 
   def parseCsv(file: String): IO[List[RawBook]] = for {
