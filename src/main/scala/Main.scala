@@ -1,49 +1,34 @@
-import goodreads.{Book, Goodreads}
-import cats.effect.IOApp
-import cats.effect.IO
+import cats.effect.{IO, IOApp}
 import cats.effect.std.Console
 import cats.implicits._
+import goodreads.{Book, Goodreads, Series}
 import goodreads.reader.CLIReader
-
-/*
-object Main extends App() {
-  val goodreads: Goodreads = new Goodreads()
-
-  val books: List[Book] = goodreads.encodeBooksFromCsv()
-
-  val allSeries = goodreads.booksToSeriesOfBooks(books);
-  val uncompletedSeries = goodreads.getUncompletedSeries(books)
-  val completedSeries = goodreads.getCompletedSeries(books)
-  val unreadSeries = goodreads.getUnreadSeries(books)
-
-  // println(goodreads.lineToBook(line))
-  // books.foreach(println)
-
-  //allSeries.foreach(println)
-  // uncompletedSeries.foreach()
-  // completedSeries.foreach(Series.print)
-  // unreadSeries.foreach(Series.print)
-
-  MarkdownWriter.write(uncompletedSeries, "uncompletedSeriesOliver.md")
-}
-*/
 
 object Main extends IOApp.Simple {
 
   override def run: IO[Unit] = {
 
-    /*
     val books: IO[List[Book]] = Goodreads.encodeBooksFromCsv("goodreads_library_export.csv")
 
-    for {
-      bookList <- books
-      _ <- bookList.traverse(IO.println)
-    } yield IO.unit
-     */
+    books.flatMap(_.traverse(IO.println))
 
     val input: IO[String] = CLIReader.readUserInput()
 
-    input.flatMap(Console[IO].println)
+    input.flatMap(choice => {
+      choice match {
+        case "1" => books.flatMap(_.traverse(IO.println)) >> IO.unit
+        case "2" =>
+          val allSeries: IO[Map[String, Series]] = books.map(Goodreads.booksToSeriesOfBooks)
+          allSeries.flatMap(_.values.toList.traverse(IO.println)) >> IO.unit
+        case "3" =>
+          val completedSeries: IO[List[Series]] = books.map(books => Goodreads.getCompletedSeries(books))
+          completedSeries.flatMap(_.traverse(IO.println)) >> IO.unit
+        case "4" =>
+          val uncompletedSeries: IO[List[Series]] = books.map(books => Goodreads.getUncompletedSeries(books))
+          uncompletedSeries.flatMap(_.traverse(IO.println)) >> IO.unit
+        case _ => IO.defer(IO.println("Wrong input"))
+      }
+    })
   }
   
 }
