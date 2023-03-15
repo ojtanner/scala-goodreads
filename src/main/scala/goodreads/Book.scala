@@ -1,9 +1,12 @@
 package goodreads
 
+import cats.Show
+import cats.implicits.showInterpolator
+
 import scala.math.Ordered.orderingToOrdered
 import goodreads.reader.RawBook
 
-case class Book(
+final case class Book(
                  id: String,
                  title: String,
                  series: Option[SeriesInstalment],

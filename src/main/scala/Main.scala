@@ -1,6 +1,6 @@
 import cats.effect.{IO, IOApp}
-import cats.effect.std.Console
 import cats.implicits._
+import goodreads.Implicits._
 import goodreads.{Book, Goodreads, Series}
 import goodreads.reader.CLIReader
 
@@ -16,7 +16,7 @@ object Main extends IOApp.Simple {
 
     input.flatMap(choice => {
       choice match {
-        case "1" => books.flatMap(_.traverse(IO.println)) >> IO.unit
+        case "1" => books.flatMap(_.traverse((book: Book) => IO.println(show"$book"))) >> IO.unit
         case "2" =>
           val allSeries: IO[Map[String, Series]] = books.map(Goodreads.booksToSeriesOfBooks)
           allSeries.flatMap(_.values.toList.traverse(IO.println)) >> IO.unit
