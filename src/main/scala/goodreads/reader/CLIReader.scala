@@ -1,5 +1,11 @@
 package goodreads.reader
 
+import cats.data.Validated
+import cats.implicits._
+import com.monovore.decline.Opts
+
+import java.nio.file.Path
+
 /**
  * What does the user need ?
  *
@@ -47,5 +53,45 @@ package goodreads.reader
  */
 object CLIReader {
 
+  private val fileOption: Opts[Path] = Opts.option[Path](
+    long = "file",
+    short = "f",
+    metavar = "path",
+    help = "Point to the export. Looks for TODO in current working directory of none is provided."
+  )
 
+  private val outputFormatOption: Opts[() => OutputFormat] =
+    Opts.option[String](
+      long = "output-format",
+      short = "o",
+      metavar = "output format",
+      help = "Specify the output format. Defaults to plaintext."
+    ).mapValidated {
+      case "plaintext" | "txt" => Validated.valid(PlaintextFormat)
+      case "markdown" | "md" => Validated.valid(MarkdownFormat)
+      case _ => Validated.invalidNel("Invalid argument. Must be plaintext or markdown.")
+    }.withDefault(PlaintextFormat)
+
+  // Split into Book Subcommand and Series Subcommand
+  private val booksOrSeriesArgument: Opts[() => SubcommandType] =
+    Opts.argument[String]("book or series")
+      .mapValidated {
+        case "books" => Validated.valid(BookSubcommand)
+        case "series" => Validated.valid(SeriesSubcommand)
+        case _ => Validated.invalidNel("Invalid argument. Must be books or series")
+      }
+
+  val command: Opts[String] = (fileOption, outputFormatOption, booksOrSeriesArgument).mapN { (file, format, argument) => s"Got $file , $format and $argument" }
 }
+
+sealed trait SubcommandType
+
+case class BookSubcommand() extends SubcommandType
+
+case class SeriesSubcommand() extends SubcommandType
+
+sealed trait OutputFormat
+
+case class MarkdownFormat() extends OutputFormat
+
+case class PlaintextFormat() extends OutputFormat
