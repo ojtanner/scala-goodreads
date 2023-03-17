@@ -8,6 +8,7 @@ object Main extends IOApp.Simple {
 
   override def run: IO[Unit] = {
 
+    /*
     val books: IO[List[Book]] = Goodreads.encodeBooksFromCsv("goodreads_library_export.csv")
 
     books.flatMap(_.traverse(IO.println))
@@ -29,6 +30,10 @@ object Main extends IOApp.Simple {
         case _ => IO.defer(IO.println("Wrong input"))
       }
     })
+
+     */
+
+    IO.unit
   }
   
 }
